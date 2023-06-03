@@ -5,7 +5,7 @@ from sales.models import Sale, Saler, ItemSale
 
 
 class SaleSerializer(serializers.ModelSerializer):
-    products = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    products = serializers.PrimaryKeyRelatedField(queryset=ItemSale.objects.all(), many=True)
 
     class Meta:
         model = Sale
@@ -16,3 +16,9 @@ class SalerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Saler
         fields = ['name', 'email', 'phone']
+
+class ItemSaleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ItemSale
+        fields = ['product', 'amount']
