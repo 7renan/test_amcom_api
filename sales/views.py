@@ -33,11 +33,15 @@ class SaleViewSet(viewsets.ModelViewSet):
         serializer = SaleDetailSerializer(queryset, many=True)
         return Response(serializer.data)
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = SaleDetailSerializer(instance)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['GET'])
     def comissions(self, request):
         date_init = request.query_params.get('date_init', False)
         date_final = request.query_params.get('date_final', False)
-
 
         # validacao de params
         if date_init and date_final:
@@ -52,8 +56,21 @@ class SaleViewSet(viewsets.ModelViewSet):
                 total_sales=Count('products')
             )
             return Response(comissions, status=status.HTTP_200_OK)
-        return Response({'Erro': 'É necessário passar um intervalo de datas válidas'},
+        if date_init or date_final:
+            return Response({'Erro': 'É necessário passar um intervalo de datas válidas'},
                         status=status.HTTP_400_BAD_REQUEST)
+
+        # se não for passado nenhum intervalo de data como parametro
+        queryset = Sale.objects.all()
+        # agrupando as vendas pelo campo de vendedor e adicionando os campos: total comissions, name e total_salers
+        comissions = queryset.values(saler_name=F('saler__name')).annotate(
+            total_comission=
+            Sum(F('products__product__value_unit') * (F('products__product__commission') / 100.00),
+                output_field=DecimalField()),
+            total_sales=Count('products')
+        )
+        return Response(comissions, status=status.HTTP_200_OK)
+
 
 
 class ItemSaleViewSet(viewsets.ModelViewSet):
