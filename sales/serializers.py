@@ -2,29 +2,42 @@ from rest_framework import serializers
 
 # models
 from sales.models import Sale, Saler, ItemSale
+
+# serilizers
 from products.serializers import ProductSerializer
-
-
-class SaleSerializer(serializers.ModelSerializer):
-    products = serializers.PrimaryKeyRelatedField(queryset=ItemSale.objects.all(), many=True)
-
-    class Meta:
-        model = Sale
-        fields = ['invoice', 'date', 'customer', 'saler', 'products']
-
+from customers.serializers import CustomerSerializer
 
 class SalerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Saler
-        fields = ['name', 'email', 'phone']
-
+        fields = ['id', 'name', 'email', 'phone']
 
 class ItemSaleSerializer(serializers.ModelSerializer):
 
     product = ProductSerializer(read_only=True, many=False)
     class Meta:
         model = ItemSale
-        fields = ['product', 'amount']
+        fields = ['id', 'product', 'amount']
+
+class SaleDetailSerializer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    saler = SalerSerializer(read_only=True)
+    products = ItemSaleSerializer(many=True)
+
+    class Meta:
+        model = Sale
+        fields = ['id', 'invoice', 'date', 'customer', 'saler', 'products']
+
+
+
+class SaleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Sale
+        fields = ['id', 'invoice', 'date', 'customer', 'saler', 'products']
+
+
+
 
 class ComissionSerializer(serializers.ModelSerializer):
     saler = SalerSerializer(read_only=True)
