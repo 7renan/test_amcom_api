@@ -21,7 +21,12 @@ class SaleTestCase(TestCase):
 
     def test_create_sale(self):
         sale_data = {"invoice": 3234, "date": "2023-06-05", "customer": self.customer.pk, "saler": self.saler.pk,
-                          "products": [self.product.pk]}
+                          "products": [{"product": {
+                                                "code": self.product.code,
+                                                "description": self.product.description,
+                                                "value_unit": self.product.value_unit,
+                                                "commission": self.product.commission
+                                            }, "amount": 3}]}
         response = self.client.post('/api/v1/sales/', sale_data, format='json')
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertEquals(Sale.objects.count(), 1)
@@ -50,3 +55,14 @@ class SaleTestCase(TestCase):
         response = self.client.get(f'/api/v1/sales/{sale.pk}/')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data['invoice'], 2198)
+
+    def test_delete_sale(self):
+        sale = Sale.objects.create(
+            invoice=2198,
+            date="2023-06-05",
+            customer=self.customer,
+            saler=self.saler,
+        )
+        sale.products.set([self.item_sale.pk])
+        response = self.client.delete(f'/api/v1/sales/{sale.pk}/')
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
